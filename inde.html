@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golf Club Selector</title>
+<style>
+body { font-family: sans-serif; text-align: center; padding: 20px; }
+.big { font-size: 40px; margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<h2>残距離 & 番手AI</h2>
+
+<div class="big" id="distance">距離: -- yd</div>
+<div class="big" id="club">番手: --</div>
+
+<script>
+// グリーンセンターの座標（例：緯度・経度）
+const greenLat = 35.123456;
+const greenLon = 139.123456;
+
+// 吉宏さんの番手表
+const clubTable = [
+  { dist: 200, club: "UT / 5I" },
+  { dist: 180, club: "5I" },
+  { dist: 165, club: "6I" },
+  { dist: 150, club: "7I" },
+  { dist: 130, club: "8I" },
+  { dist: 115, club: "9I" },
+  { dist: 100, club: "PW" }
+];
+
+// 距離計算（ハバーサイン式）
+function calcDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // meters
+}
+
+// GPS取得
+navigator.geolocation.watchPosition(pos => {
+  const lat = pos.coords.latitude;
+  const lon = pos.coords.longitude;
+
+  const meters = calcDistance(lat, lon, greenLat, greenLon);
+  const yards = Math.round(meters * 1.09361);
+
+  document.getElementById("distance").innerText = `距離: ${yards} yd`;
+
+  // 番手選択
+  let selected = "--";
+  for (let i of clubTable) {
+    if (yards >= i.dist) { selected = i.club; break; }
+  }
+  document.getElementById("club").innerText = `番手: ${selected}`;
+});
+</script>
+
+</body>
+</html>
